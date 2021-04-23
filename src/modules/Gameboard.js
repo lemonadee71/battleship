@@ -11,11 +11,11 @@ const Gameboard = (size) => {
     return board[x][y];
   };
 
-  const placeShip = ({ coord, ship, direction = 'x' }) => {
+  const placeShip = ({ pos, ship, direction = 'x' }) => {
     const id = Math.floor(Math.random() * 100);
     state.ships.set(id, ship);
 
-    const [x, y] = coord;
+    const [x, y] = pos;
     const [verticalIncrement, horizontalIncrement] =
       direction === 'y' ? [1, 0] : [0, 1];
 
@@ -56,7 +56,7 @@ const Gameboard = (size) => {
 
     board[x][y] = 'HIT';
 
-    return isGameOver() ? false : true;
+    return true;
   };
 
   return {
@@ -67,7 +67,5 @@ const Gameboard = (size) => {
     isGameOver,
   };
 };
-
-// const board = Gameboard(5);
 
 export default Gameboard;
