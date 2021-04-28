@@ -2,8 +2,6 @@ import React from 'react';
 import { uuid } from '../utils';
 
 const Board = ({ size, board }) => {
-  console.log('HELLO');
-
   const determineCellClass = (cell) => {
     switch (cell) {
       case 'HIT':
@@ -24,9 +22,10 @@ const Board = ({ size, board }) => {
       {board
         .map((row) =>
           row.map((cell) => (
-            <div key={uuid()} className={`cell${determineCellClass(cell)}`}>
-              test
-            </div>
+            <div
+              key={uuid()}
+              className={`cell${determineCellClass(cell)}`}
+            ></div>
           ))
         )
         .flat()}

@@ -7,9 +7,9 @@ import difficulty from './difficulty.json';
 import Board from './components/Board';
 
 const App = () => {
-  // const [size, setSize] = useState(difficulty.normal.size)
-  let size = difficulty.normal.size;
+  let size = difficulty.hard.size;
   const board = Gameboard(size);
+  const [playerBoard, setPlayerBoard] = useState(board.getBoard());
 
   useEffect(() => {
     const placeShip = ({ name, pos, direction }) => {
@@ -25,7 +25,7 @@ const App = () => {
     };
 
     const ai = new AI(size);
-    const allShips = difficulty.normal.ships;
+    const allShips = difficulty.hard.ships;
     let currentShip = null;
 
     while (allShips.length) {
@@ -36,6 +36,7 @@ const App = () => {
         let move = ai.placeShipInRandom();
 
         if (placeShip({ name: currentShip.name, ...move })) {
+          setPlayerBoard(board.getBoard());
           currentCount -= 1;
         }
       }
@@ -47,7 +48,7 @@ const App = () => {
   return (
     <div className="App">
       <h1>Battleship</h1>
-      <Board size={size} board={board.getBoard()} />
+      <Board size={size} board={playerBoard} />
     </div>
   );
 };
