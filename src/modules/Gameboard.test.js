@@ -15,6 +15,10 @@ describe('Gameboard', () => {
     board.placeShip({ ship: anotherShip, pos: [3, 0] });
   });
 
+  afterEach(() => {
+    board = null;
+  });
+
   it('place ship on the board', () => {
     let shipLength = 0;
     for (let i = 0; i < ship.length; i++) {
@@ -24,6 +28,32 @@ describe('Gameboard', () => {
     }
 
     expect(shipLength).toBe(ship.length);
+  });
+
+  describe('does not allow placing ships', () => {
+    let newShip;
+    beforeEach(() => {
+      newShip = new Ship(shipTypes.destroyer.name, shipTypes.destroyer.length);
+    });
+
+    it('next to each other', () => {
+      expect(() =>
+        board.placeShip({ ship: newShip, pos: [0, 2], direction: 'y' })
+      ).toThrowError('Cannot place ships next to each other');
+      console.log(board.board);
+    });
+
+    it('on an occupied cell', () => {
+      expect(() =>
+        board.placeShip({ ship: newShip, pos: [0, 0], direction: 'y' })
+      ).toThrowError('Cell already occupied');
+    });
+
+    it('that can go off the board', () => {
+      expect(() =>
+        board.placeShip({ ship: newShip, pos: [4, 0], direction: 'y' })
+      ).toThrowError('Ship go off bounds');
+    });
   });
 
   it('lets players attack', () => {
