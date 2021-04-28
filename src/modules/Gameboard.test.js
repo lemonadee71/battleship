@@ -36,13 +36,6 @@ describe('Gameboard', () => {
       newShip = new Ship(shipTypes.destroyer.name, shipTypes.destroyer.length);
     });
 
-    it('next to each other', () => {
-      expect(() =>
-        board.placeShip({ ship: newShip, pos: [0, 2], direction: 'y' })
-      ).toThrowError('Cannot place ships next to each other');
-      console.log(board.board);
-    });
-
     it('on an occupied cell', () => {
       expect(() =>
         board.placeShip({ ship: newShip, pos: [0, 0], direction: 'y' })
@@ -51,8 +44,14 @@ describe('Gameboard', () => {
 
     it('that can go off the board', () => {
       expect(() =>
-        board.placeShip({ ship: newShip, pos: [4, 0], direction: 'y' })
+        board.placeShip({ ship: newShip, pos: [3, 4], direction: 'y' })
       ).toThrowError('Ship go off bounds');
+    });
+
+    it('next to each other', () => {
+      expect(() =>
+        board.placeShip({ ship: newShip, pos: [2, 1], direction: 'y' })
+      ).toThrowError('Cannot place ships next to each other');
     });
   });
 
