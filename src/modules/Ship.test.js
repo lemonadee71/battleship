@@ -1,5 +1,5 @@
 import Ship from './Ship';
-import shipTypes from './shipTypes';
+import shipTypes from '../ships';
 
 describe('Ship', () => {
   let ship;

@@ -12,7 +12,6 @@ class Ship {
   }
 
   isSunk() {
-    // console.log(this.body);
     return this.body.every((part) => part === 'X');
   }
 }

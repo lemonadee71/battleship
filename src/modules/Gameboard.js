@@ -1,85 +1,77 @@
+import { uuid } from '../utils';
+
+const tryCatchForLoop = (limit, fn, start = 0) => {
+  for (let i = start; i < limit; i++) {
+    try {
+      fn.call(null, i);
+    } catch (error) {
+      continue;
+    }
+  }
+};
+
 const Gameboard = (size) => {
-  const board = [...new Array(size).fill([])].map(() => [
+  let board = [...new Array(size).fill([])].map(() => [
     ...new Array(size).fill(null),
   ]);
+
+  const getBoard = () => [...board].map((row) => [...row]);
 
   const state = {
     ships: new Map(),
   };
 
-  const get = (x, y) => {
-    if (x < 0 || x > size - 1 || y < 0 || y > size - 1) {
+  const _reflectBoardChanges = (copy) => {
+    board = copy;
+  };
+
+  const _markSurroundings = (pos, length, direction) => {
+    const boardCopy = getBoard();
+    const [rowLimit, columnLimit] =
+      direction === 'y' ? [length + 2, 2] : [2, length + 2];
+
+    const start = [pos.start.row - 1, pos.start.col - 1];
+    const end = [pos.end.row + 1, pos.end.col + 1];
+
+    tryCatchForLoop(columnLimit, (i) => {
+      get(start[0], start[1] + i);
+      boardCopy[start[0]][start[1] + i] = undefined;
+    });
+    tryCatchForLoop(columnLimit, (i) => {
+      get(end[0], end[1] - i);
+      boardCopy[end[0]][end[1] - i] = undefined;
+    });
+    tryCatchForLoop(rowLimit, (i) => {
+      get(start[0] + i, start[1]);
+      boardCopy[start[0] + i][start[1]] = undefined;
+    });
+    tryCatchForLoop(rowLimit, (i) => {
+      get(end[0] - i, end[1]);
+      boardCopy[end[0] - i][end[1]] = undefined;
+    });
+
+    _reflectBoardChanges(boardCopy);
+  };
+
+  const get = (row, col) => {
+    if (row < 0 || row > size - 1 || col < 0 || col > size - 1) {
       throw new Error('Coordinates is off bounds');
     }
 
-    return board[x][y];
-  };
-
-  const markSurroundings = (pos, length, direction) => {
-    const [rowLimit, columnLimit] =
-      direction === 'y' ? [length + 1, 1] : [1, length + 1];
-
-    const start = [pos.start.x - 1, pos.start.y - 1];
-    const end = [pos.end.x + 1, pos.end.y + 1];
-    // let xi = 0;
-    // let yi = 0;
-
-    for (let i = 0; i <= columnLimit; i++) {
-      try {
-        get(start[0], start[1] + i);
-
-        board[start[0]][start[1] + i] = undefined;
-      } catch (error) {
-        continue;
-      }
-    }
-
-    for (let i = 0; i <= columnLimit; i++) {
-      try {
-        get(end[0], end[1] - i);
-
-        board[end[0]][end[1] - i] = undefined;
-      } catch (error) {
-        continue;
-      }
-    }
-
-    for (let j = 0; j <= rowLimit; j++) {
-      try {
-        // Just to check if out of bounds
-        get(start[0] + j, start[1]);
-
-        board[start[0] + j][start[1]] = undefined;
-      } catch (error) {
-        continue;
-      }
-    }
-
-    for (let j = 0; j <= rowLimit; j++) {
-      try {
-        get(end[0] - j, end[1]);
-        board[end[0] - j][end[1]] = undefined;
-      } catch (error) {
-        continue;
-      }
-    }
+    return board[row][col];
   };
 
   const placeShip = ({ pos, ship, direction = 'x' }) => {
-    const id = Math.random().toString(36).substr(2, 4);
+    const boardCopy = getBoard();
+
+    const id = uuid(4);
     state.ships.set(id, ship);
 
-    const [verticalIncrement, horizontalIncrement] =
-      direction === 'y' ? [1, 0] : [0, 1];
-    const [x, y] = pos;
-
-    // Preliminary check
-    // Check if cell is within a ship's surroundings
-    if (get(x, y) === undefined)
-      throw new Error('Cannot place ships next to each other');
+    const [rowIncrement, columnIncrement] = direction === 'y' ? [1, 0] : [0, 1];
+    const [row, col] = pos;
 
     // Check if cell is already marked
-    if (get(x, y) !== null) throw new Error('Cell already occupied');
+    if (typeof get(row, col) === 'string') throw new Error('Cell occupied');
 
     let xi = 0;
     let yi = 0;
@@ -90,35 +82,35 @@ const Gameboard = (size) => {
       // Check if placing will result in ship
       // to go off the board
       try {
-        marker = get(x + xi, y + yi);
+        marker = get(row + yi, col + xi);
       } catch (error) {
-        console.log(error.toString());
-        throw new Error('Ship go off bounds');
+        throw new Error('Ship off-bounds');
       }
 
       // Throw error if placing will result in the ship
       // occupying another ship's surroundings
-      if (marker === undefined)
-        throw new Error('Cannot place ships next to each other');
+      if (marker === undefined) throw new Error('Cell within a ship territory');
 
       // Throw error when placing will result in overlap
-      if (marker !== null) throw new Error('Ship overlapped with another ship');
+      if (marker !== null) throw new Error('Ship overlaps');
 
-      board[x + xi][y + yi] = `${ship.name}[${i}]_${id}`;
+      boardCopy[row + yi][col + xi] = `${ship.name}[${i}]_${id}`;
 
-      xi += verticalIncrement;
-      yi += horizontalIncrement;
+      xi += columnIncrement;
+      yi += rowIncrement;
     }
 
+    _reflectBoardChanges(boardCopy);
+
     const coordinates = {
-      start: { x, y },
+      start: { row, col },
       end: {
-        x: direction === 'y' ? x + ship.length - 1 : x,
-        y: direction === 'x' ? y + ship.length - 1 : y,
+        row: direction === 'y' ? row + ship.length - 1 : row,
+        col: direction === 'x' ? col + ship.length - 1 : col,
       },
     };
 
-    markSurroundings(coordinates, ship.length, direction);
+    _markSurroundings(coordinates, ship.length, direction);
 
     return true;
   };
@@ -136,6 +128,7 @@ const Gameboard = (size) => {
   };
 
   const receiveAttack = (x, y) => {
+    const boardCopy = getBoard();
     const marker = get(x, y);
 
     if (marker === 'HIT' || marker === 'MISS') {
@@ -143,7 +136,8 @@ const Gameboard = (size) => {
     }
 
     if (!marker) {
-      board[x][y] = 'MISS';
+      boardCopy[x][y] = 'MISS';
+      _reflectBoardChanges(boardCopy);
 
       return false;
     }
@@ -154,14 +148,15 @@ const Gameboard = (size) => {
     const ship = state.ships.get(id);
     ship.hit(index);
 
-    board[x][y] = 'HIT';
+    boardCopy[x][y] = 'HIT';
+    _reflectBoardChanges(boardCopy);
 
     return true;
   };
 
   return {
     get,
-    board,
+    getBoard,
     placeShip,
     receiveAttack,
     isGameOver,
