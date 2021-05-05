@@ -15,6 +15,13 @@ const Gameboard = (size) => {
     ...new Array(size).fill(null),
   ]);
 
+  const reset = () => {
+    board = [...new Array(size).fill([])].map(() => [
+      ...new Array(size).fill(null),
+    ]);
+    state.ships.clear();
+  };
+
   const getBoard = () => [...board].map((row) => [...row]);
 
   const state = {
@@ -157,6 +164,7 @@ const Gameboard = (size) => {
   return {
     get,
     getBoard,
+    reset,
     placeShip,
     receiveAttack,
     isGameOver,

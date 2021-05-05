@@ -23,7 +23,7 @@ const Board = ({ size, board }) => {
         .map((row) =>
           row.map((cell) => (
             <div
-              key={uuid()}
+              key={uuid(10)}
               className={`cell${determineCellClass(cell)}`}
             ></div>
           ))
