@@ -24,12 +24,12 @@ const Gameboard = (size) => {
 
   const getBoard = () => [...board].map((row) => [...row]);
 
-  const state = {
-    ships: new Map(),
+  const setBoard = (newBoard) => {
+    board = newBoard;
   };
 
-  const _reflectBoardChanges = (copy) => {
-    board = copy;
+  const state = {
+    ships: new Map(),
   };
 
   const _markSurroundings = (pos, length, direction) => {
@@ -57,7 +57,7 @@ const Gameboard = (size) => {
       boardCopy[end[0] - i][end[1]] = undefined;
     });
 
-    _reflectBoardChanges(boardCopy);
+    setBoard(boardCopy);
   };
 
   const get = (row, col) => {
@@ -107,7 +107,7 @@ const Gameboard = (size) => {
       yi += rowIncrement;
     }
 
-    _reflectBoardChanges(boardCopy);
+    setBoard(boardCopy);
 
     const coordinates = {
       start: { row, col },
@@ -123,15 +123,15 @@ const Gameboard = (size) => {
   };
 
   const isGameOver = () => {
-    // return board.every((row) =>
-    //   row.every((cell) => ['HIT', 'MISS', null].includes(cell))
-    // );
+    return board.every((row) =>
+      row.every((cell) => ['HIT', 'MISS', null, undefined].includes(cell))
+    );
 
     // v2
-    return Array.from(state.ships, ([key, value]) => ({
-      key,
-      value,
-    })).every(({ value: ship }) => ship.isSunk());
+    // return Array.from(state.ships, ([key, value]) => ({
+    //   key,
+    //   value,
+    // })).every(({ value: ship }) => ship.isSunk());
   };
 
   const receiveAttack = (x, y) => {
@@ -144,7 +144,7 @@ const Gameboard = (size) => {
 
     if (!marker) {
       boardCopy[x][y] = 'MISS';
-      _reflectBoardChanges(boardCopy);
+      setBoard(boardCopy);
 
       return false;
     }
@@ -156,7 +156,7 @@ const Gameboard = (size) => {
     ship.hit(index);
 
     boardCopy[x][y] = 'HIT';
-    _reflectBoardChanges(boardCopy);
+    setBoard(boardCopy);
 
     return true;
   };

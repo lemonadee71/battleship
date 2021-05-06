@@ -1,4 +1,13 @@
 {
+  "test": {
+    "size": 10,
+    "ships": [
+      {
+        "name": "battleship",
+        "number": 1
+      }
+    ]
+  },
   "normal": {
     "size": 10,
     "ships": [

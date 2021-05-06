@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import difficulty from './difficulty.json';
 import ships from './ships.json';
 import Gameboard from './modules/Gameboard';
@@ -8,107 +8,160 @@ import Board from './components/Board';
 
 const Game = ({ mode }) => {
   const [isGameStart, setIsGameStart] = useState(false);
-  const [isGameOver, setIsGameOver] = useState(false);
-  const [size, setSize] = useState(difficulty[mode].size);
+  const [isGameOver, setIsGameOver] = useState(false); // the value doesn't matter, we just need this to trigger a reset
+  const size = difficulty[mode].size;
+  const ai = new AI(size);
 
-  const createBoard = () =>
-    [...new Array(size).fill([])].map(() => [...new Array(size).fill(null)]);
+  const [playerBoard, setPlayerBoard] = useState();
+  const [enemyBoard, setEnemyBoard] = useState();
+  // let playerBoard = Gameboard(size);
+  // let enemyBoard = Gameboard(size);
 
   const [player, setPlayer] = useState({
     type: 'human',
-    board: Gameboard(size),
+    board: [],
   });
   const [enemy, setEnemy] = useState({
-    main: new AI(),
     type: 'computer',
-    board: Gameboard(size),
+    board: [],
   });
-  const [playerBoard, setPlayerBoard] = useState(createBoard());
-  const [enemyBoard, setEnemyBoard] = useState(createBoard());
 
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
 
   useEffect(() => {
-    setSize(difficulty[mode].size);
+    console.log('Resetting...');
     setPlayer({
       type: 'human',
-      board: Gameboard(difficulty[mode].size),
+      board: [],
     });
     setEnemy({
-      main: new AI(),
       type: 'computer',
-      board: Gameboard(difficulty[mode].size),
+      board: [],
     });
-    setPlayerBoard(
-      [...new Array(size).fill([])].map(() => [...new Array(size).fill(null)])
-    );
-    setEnemyBoard(
-      [...new Array(size).fill([])].map(() => [...new Array(size).fill(null)])
-    );
     setIsGameStart(false);
-    setIsGameOver(false);
+    //setIsGameOver(false);
     setIsPlayerTurn(true);
+    setPlayerBoard(null);
+    setEnemyBoard(null);
+  }, [mode, isGameOver]);
 
-    placeShipsInRandom(false);
-  }, [size, mode, isGameOver]);
+  const placeShipsInRandom = useCallback(
+    (isPlayer = true) => {
+      console.log('Placing ships...');
+      const currentBoard = Gameboard(size);
 
-  const placeShip = ({ board, name, pos, direction }) => {
-    const shipDetails = ships[name];
-    const ship = new Ship(shipDetails.name, shipDetails.length);
+      const virtualAI = new AI(size);
+      const allShips = [...difficulty[mode].ships];
+      let currentShip = null;
 
-    try {
-      return board.placeShip({ ship, pos, direction });
-    } catch (error) {
-      return false;
-    }
-  };
+      while (allShips.length) {
+        currentShip = allShips.shift();
 
-  const placeShipsInRandom = (isPlayer = true) => {
-    const currentPlayer = isPlayer ? player : enemy;
-    currentPlayer.board.reset();
+        let currentCount = currentShip.number;
+        while (currentCount) {
+          const move = virtualAI.placeShipInRandom();
+          const shipDetails = ships[currentShip.name];
+          const ship = new Ship(shipDetails.name, shipDetails.length);
 
-    const ai = new AI(size);
-    const allShips = [...difficulty[mode].ships];
-    let currentShip = null;
-
-    while (allShips.length) {
-      currentShip = allShips.shift();
-
-      let currentCount = currentShip.number;
-      while (currentCount) {
-        const move = ai.placeShipInRandom();
-        console.log('Placing ship...');
-        if (
-          placeShip({
-            board: currentPlayer.board,
-            name: currentShip.name,
-            ...move,
-          })
-        ) {
-          isPlayer
-            ? setPlayerBoard(currentPlayer.board.getBoard())
-            : setEnemyBoard(currentPlayer.board.getBoard());
-          currentCount -= 1;
+          try {
+            currentBoard.placeShip({ ship, ...move });
+            currentCount -= 1;
+          } catch (error) {
+            continue;
+          }
         }
       }
-    }
 
-    //console.table(playerBoard);
-  };
+      isPlayer
+        ? setPlayer({ board: currentBoard.getBoard() })
+        : setEnemy({ board: currentBoard.getBoard() });
+
+      isPlayer ? setPlayerBoard(currentBoard) : setEnemyBoard(currentBoard);
+    },
+    [mode, size]
+  );
 
   const startGame = () => {
+    alert('Game start!');
     setIsGameStart(true);
   };
+
+  // This should run on mount
+  // And any clicks on randomize button
+  // const randomize = () => {
+  //   placeShipsInRandom(true);
+  //   placeShipsInRandom(false);
+  // };
+
+  useEffect(() => {
+    placeShipsInRandom(true);
+    placeShipsInRandom(false);
+  }, [placeShipsInRandom, isGameOver]);
+
+  const checkForWinner = () => {
+    console.log('Checking for winner...');
+    if (playerBoard.isGameOver()) {
+      alert('Computer wins!');
+      setIsGameOver(!isGameOver);
+    } else if (enemyBoard.isGameOver()) {
+      alert('You won!');
+      setIsGameOver(!isGameOver);
+    }
+
+    // console.table(playerBoard.getBoard());
+    // console.table(enemyBoard.getBoard());
+  };
+
+  const attack = (x, y) => {
+    try {
+      console.log('Attacking...');
+      !isPlayerTurn
+        ? playerBoard.receiveAttack(x, y)
+        : enemyBoard.receiveAttack(x, y);
+
+      !isPlayerTurn
+        ? setPlayer({ board: playerBoard.getBoard() })
+        : setEnemy({ board: enemyBoard.getBoard() });
+
+      setIsPlayerTurn(!isPlayerTurn);
+      checkForWinner();
+    } catch (error) {
+      console.warn(error.toString());
+    }
+  };
+
+  // useEffect(() => {
+  //   if (!isPlayerTurn && isGameStart) {
+  //     setTimeout(() => {
+  //       playerBoard.receiveAttack(...ai.attackInRandom());
+  //       setIsPlayerTurn(true);
+  //     }, 500);
+  //   }
+  // }, [ai, playerBoard, isGameStart, isPlayerTurn]);
 
   return (
     <>
       {isGameStart ? null : <button onClick={startGame}>Start</button>}
-      <div>
-        <Board size={size} board={playerBoard} />
-        {isGameStart ? null : (
-          <button onClick={placeShipsInRandom}>Randomize</button>
-        )}
-        <Board size={size} board={enemyBoard} />
+      {isGameStart ? null : (
+        <button onClick={() => placeShipsInRandom(true)}>Randomize</button>
+      )}
+      <div class="container">
+        <Board
+          type="human"
+          gameStart={isGameStart}
+          size={size}
+          board={player.board}
+          myTurn={isPlayerTurn}
+          clickHandler={attack}
+        />
+        <Board
+          type="computer"
+          gameStart={isGameStart}
+          size={size}
+          board={enemy.board}
+          myTurn={!isPlayerTurn}
+          clickHandler={attack}
+        />
       </div>
     </>
   );

@@ -12,6 +12,7 @@ const App = () => {
     <div className="App">
       <h1>Battleship</h1>
       <select name="mode" value={mode} onChange={changeMode}>
+        <option value="test">Test</option>
         <option value="normal">Normal</option>
         <option value="medium">Intermediate</option>
         <option value="hard">Hard</option>

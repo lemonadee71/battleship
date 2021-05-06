@@ -1,18 +1,29 @@
 class AI {
   constructor(size) {
     this.size = size;
+    this.pastMoves = [];
   }
 
-  attackInRandom(size = 14) {
-    return Math.floor(Math.random() * (this.size || size));
+  makeMove() {
+    return [
+      Math.floor(Math.random() * this.size),
+      Math.floor(Math.random() * this.size),
+    ];
+  }
+
+  attackInRandom() {
+    let move;
+
+    do {
+      move = this.makeMove();
+    } while (this.pastMoves.includes(move.join('-')));
+
+    return move;
   }
 
   placeShipInRandom() {
     return {
-      pos: [
-        Math.floor(Math.random() * this.size),
-        Math.floor(Math.random() * this.size),
-      ],
+      pos: this.makeMove,
       direction: Math.floor(Math.random() * 2) ? 'x' : 'y',
     };
   }

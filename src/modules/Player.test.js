@@ -13,7 +13,7 @@ describe('AI', () => {
   });
 
   it('attacks randomly', () => {
-    expect(ai.attackInRandom()).toBeLessThanOrEqual(size);
+    expect(ai.attackInRandom()[0]).toBeLessThanOrEqual(size);
   });
 
   it('places ships randomly', () => {

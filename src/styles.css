@@ -8,23 +8,27 @@ div#grid {
   grid-gap: 1px 1px;
 }
 
+.container {
+  display: flex;
+}
+
 .cell {
-  background-color: rgb(0, 247, 255);
+  background-color: white;
   box-sizing: border-box;
 }
 
 .ship {
-  background-color: rgb(20, 20, 20);
+  background-color: rgb(11, 73, 167);
 }
 
 .hit {
-  background-color: rgb(212, 40, 40);
+  background-color: red;
 }
 
 .missed {
-  background-color: rgb(61, 49, 49);
-}
-
-.occupied {
   background-color: gray;
 }
+
+/* .occupied {
+  background-color: gray;
+} */
