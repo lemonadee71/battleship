@@ -18,12 +18,15 @@ class AI {
       move = this.makeMove();
     } while (this.pastMoves.includes(move.join('-')));
 
+    this.pastMoves.push(move.join('-'));
+    console.log(this.pastMoves);
+
     return move;
   }
 
   placeShipInRandom() {
     return {
-      pos: this.makeMove,
+      pos: this.makeMove(),
       direction: Math.floor(Math.random() * 2) ? 'x' : 'y',
     };
   }

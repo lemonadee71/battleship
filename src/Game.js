@@ -67,14 +67,19 @@ const Game = ({ mode }) => {
             currentBoard.placeShip({ ship, ...move });
             currentCount -= 1;
           } catch (error) {
+            console.log(error.toString());
             continue;
           }
         }
       }
 
       isPlayer
-        ? setPlayer({ board: currentBoard.getBoard() })
-        : setEnemy({ board: currentBoard.getBoard() });
+        ? setPlayer((p) => {
+            return { ...p, board: currentBoard.getBoard() };
+          })
+        : setEnemy((e) => {
+            return { ...e, board: currentBoard.getBoard() };
+          });
 
       isPlayer ? setPlayerBoard(currentBoard) : setEnemyBoard(currentBoard);
     },
@@ -94,6 +99,7 @@ const Game = ({ mode }) => {
   // };
 
   useEffect(() => {
+    console.log('test');
     placeShipsInRandom(true);
     placeShipsInRandom(false);
   }, [placeShipsInRandom, isGameOver]);
@@ -115,15 +121,24 @@ const Game = ({ mode }) => {
   const attack = (x, y) => {
     try {
       console.log('Attacking...');
-      !isPlayerTurn
-        ? playerBoard.receiveAttack(x, y)
-        : enemyBoard.receiveAttack(x, y);
+      if (isPlayerTurn) {
+        enemyBoard.receiveAttack(x, y);
+        setEnemy({ ...enemy, board: enemyBoard.getBoard() });
+        console.log(enemy);
+        if (enemy.type === 'computer') {
+          console.log('Enemy attacking...');
+          setTimeout(() => {
+            playerBoard.receiveAttack(...ai.attackInRandom());
+            setPlayer({ ...player, board: playerBoard.getBoard() });
+            setIsPlayerTurn(true);
+          }, 500);
+        }
+      } else if (!isPlayerTurn && enemy.type === 'human') {
+        playerBoard.receiveAttack(x, y);
+        setPlayer({ ...player, board: playerBoard.getBoard() });
+      }
 
-      !isPlayerTurn
-        ? setPlayer({ board: playerBoard.getBoard() })
-        : setEnemy({ board: enemyBoard.getBoard() });
-
-      setIsPlayerTurn(!isPlayerTurn);
+      //setIsPlayerTurn(!isPlayerTurn);
       checkForWinner();
     } catch (error) {
       console.warn(error.toString());
@@ -132,10 +147,10 @@ const Game = ({ mode }) => {
 
   // useEffect(() => {
   //   if (!isPlayerTurn && isGameStart) {
-  //     setTimeout(() => {
-  //       playerBoard.receiveAttack(...ai.attackInRandom());
-  //       setIsPlayerTurn(true);
-  //     }, 500);
+  // setTimeout(() => {
+  //   playerBoard.receiveAttack(...ai.attackInRandom());
+  //   setIsPlayerTurn(true);
+  // }, 500);
   //   }
   // }, [ai, playerBoard, isGameStart, isPlayerTurn]);
 
@@ -145,7 +160,7 @@ const Game = ({ mode }) => {
       {isGameStart ? null : (
         <button onClick={() => placeShipsInRandom(true)}>Randomize</button>
       )}
-      <div class="container">
+      <div className="container">
         <Board
           type="human"
           gameStart={isGameStart}
